@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>خطوة للتقسيط</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#0F3D3E;
+    --ink-dark:#0A2A2B;
+    --amber:#D98E2B;
+    --amber-light:#F4B860;
+    --paper:#FAF8F4;
+    --card:#FFFFFF;
+    --line:#E7E2D8;
+    --text:#1E2B2B;
+    --muted:#6B7877;
+    --ok:#2F8558;
+    --warn:#D98E2B;
+    --late:#C24A3E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Tajawal',sans-serif;
+    background:var(--paper);
+    color:var(--text);
+    min-height:100vh;
+  }
+  .screen{display:none;min-height:100vh;animation:fadeIn .25s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  /* ===== شاشة الدخول ===== */
+  #authScreen.active{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+    background:linear-gradient(160deg,var(--ink) 0%,var(--ink-dark) 55%,#081E1F 100%);
+  }
+  .lock-bg{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+    background:linear-gradient(160deg,var(--ink) 0%,var(--ink-dark) 55%,#081E1F 100%);
+  }
+  .auth-box{
+    background:var(--paper);
+    width:100%;
+    max-width:380px;
+    border-radius:20px;
+    padding:36px 28px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .brand{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .brand .step-mark{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:56px;height:56px;
+    border-radius:16px;
+    background:var(--ink);
+    color:var(--amber-light);
+    font-size:28px;
+    font-weight:900;
+    margin-bottom:14px;
+  }
+  .brand h1{
+    font-size:22px;
+    font-weight:900;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .brand p{
+    margin:0;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:6px;
+    color:var(--ink);
+  }
+  .field input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-family:inherit;
+    font-size:15px;
+    background:#fff;
+    color:var(--text);
+  }
+  .field input:focus{outline:none;border-color:var(--amber);}
+  .btn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .08s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover{opacity:.92;}
+  .btn-amber{background:var(--amber);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);}
+  .switch-mode{
+    text-align:center;
+    margin-top:16px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .switch-mode a{color:var(--amber);font-weight:700;text-decoration:none;cursor:pointer;}
+  .auth-error{
+    background:#FBEAE7;
+    color:var(--late);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13px;
+    margin-bottom:14px;
+    display:none;
+  }
+
+  /* ===== التطبيق الرئيسي ===== */
+  header.app-header{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  header.app-header .title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  header.app-header .title .mark{
+    width:34px;height:34px;
+    border-radius:9px;
+    background:var(--amber);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;
+    font-size:16px;
+  }
+  header.app-header h1{
+    font-size:17px;
+    margin:0;
+    font-weight:700;
+  }
+  header.app-header button{
+    background:transparent;
+    border:1.5px solid rgba(255,255,255,.35);
+    color:#fff;
+    padding:7px 14px;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  main{max-width:640px;margin:0 auto;padding:18px 16px 100px;}
+
+  .tabbar{
+    display:flex;
+    gap:6px;
+    background:var(--ink);
+    padding:0 10px 10px;
+    position:sticky;
+    top:66px;
+    z-index:19;
+  }
+  .tab-btn{
+    flex:1;
+    background:rgba(255,255,255,.08);
+    color:rgba(255,255,255,.75);
+    border:none;
+    padding:10px 6px;
+    border-radius:9px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:var(--amber);
+    color:#fff;
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .search-box{
+    position:relative;
+    margin-bottom:16px;
+  }
+  .search-box input{
+    width:100%;
+    padding:12px 42px 12px 14px;
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    font-family:inherit;
+    font-size:15px;
+    background:var(--card);
+    color:var(--text);
+  }
+  .search-box input:focus{outline:none;border-color:var(--amber);}
+  .search-box .search-icon{
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--muted);
+    font-size:16px;
+    pointer-events:none;
+  }
+
+  .name-list{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .name-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition:background .12s ease;
+  }
+  .name-row:last-child{border-bottom:none;}
+  .name-row:active{background:#F2EFE7;}
+  .name-avatar{
+    width:38px;height:38px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--amber-light);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .name-info{flex:1;min-width:0;}
+  .name-info .n-name{font-size:15px;font-weight:700;color:var(--text);}
+  .name-info .n-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .name-row .n-arrow{color:var(--muted);font-size:16px;}
+
+  .simple-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:12px;
+    cursor:pointer;
+  }
+  .simple-card:active{transform:scale(.99);}
+  .simple-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+  .simple-row b{color:var(--ink);font-weight:700;}
+
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .stat-card .stat-label{font-size:13px;color:var(--muted);margin-bottom:8px;}
+  .stat-card .stat-num{font-size:28px;font-weight:900;color:var(--ink);}
+  .stat-card.profit .stat-num{color:var(--ok);}
+  .stat-card.purchase .stat-num{color:var(--late);}
+
+  .summary-bar{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    text-align:center;
+  }
+  .summary-card .num{font-size:19px;font-weight:900;color:var(--ink);}
+  .summary-card .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .section-title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    margin:6px 2px 12px;
+  }
+
+  .customer-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:12px;
+    cursor:pointer;
+    transition:box-shadow .15s ease, transform .08s ease;
+  }
+  .customer-card:active{transform:scale(.99);}
+  .customer-card:hover{box-shadow:0 4px 14px rgba(15,61,62,.10);}
+  .cc-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .cc-name{font-size:16px;font-weight:700;color:var(--text);}
+  .cc-product{font-size:13px;color:var(--muted);margin-top:2px;}
+  .badge{
+    font-size:11px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .badge::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .badge.ok{background:#E7F4EC;color:var(--ok);}
+  .badge.warn{background:#FCF1DE;color:var(--warn);}
+  .badge.late{background:#FBEAE7;color:var(--late);}
+
+  .cc-progress{
+    margin-top:12px;
+    height:7px;
+    background:#EFEBE2;
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .cc-progress-fill{
+    height:100%;
+    background:var(--amber);
+    border-radius:10px;
+  }
+  .cc-nums{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .cc-nums b{color:var(--ink);font-weight:700;}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--muted);
+  }
+  .empty-state .mark{font-size:40px;margin-bottom:10px;}
+  .empty-state p{font-size:14px;margin:0;}
+
+  .fab{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--amber);
+    color:#fff;
+    border:none;
+    padding:14px 26px;
+    border-radius:30px;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    box-shadow:0 8px 24px rgba(217,142,43,.4);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    z-index:30;
+  }
+
+  /* ===== النوافذ المنبثقة ===== */
+  .overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(10,30,31,.55);
+    z-index:50;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .overlay.active{display:flex;}
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:640px;
+    max-height:92vh;
+    overflow-y:auto;
+    border-radius:22px 22px 0 0;
+    padding:22px 20px 30px;
+    animation:slideUp .22s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-handle{
+    width:40px;height:4px;background:var(--line);border-radius:4px;
+    margin:0 auto 16px;
+  }
+  .sheet-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .sheet-header h2{font-size:18px;margin:0;color:var(--ink);}
+  .close-x{
+    background:#EFEBE2;
+    border:none;
+    width:32px;height:32px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+
+  .detail-hero{
+    background:var(--ink);
+    color:#fff;
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:18px;
+  }
+  .detail-hero .dh-name{font-size:19px;font-weight:900;}
+  .detail-hero .dh-product{font-size:13px;opacity:.8;margin-top:2px;}
+  .detail-hero .dh-remaining{
+    margin-top:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+  }
+  .detail-hero .dh-remaining .n{font-size:26px;font-weight:900;color:var(--amber-light);}
+  .detail-hero .dh-remaining .l{font-size:11px;opacity:.75;}
+
+  .info-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .info-item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .info-item .l{font-size:11px;color:var(--muted);margin-bottom:3px;}
+  .info-item .v{font-size:14px;font-weight:700;color:var(--text);}
+
+  .pay-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:20px;
+  }
+  .pay-form h3{font-size:14px;margin:0 0 12px;color:var(--ink);}
+  .pay-row{display:flex;gap:10px;}
+  .pay-row .field{flex:1;margin-bottom:0;}
+
+  .payments-list{margin-bottom:10px;}
+  .payment-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+  }
+  .payment-row:last-child{border-bottom:none;}
+  .payment-row .pdate{color:var(--muted);}
+  .payment-row .pamt{font-weight:700;color:var(--ok);}
+  .payment-row .del-pay{
+    background:none;border:none;color:var(--late);
+    font-size:12px;cursor:pointer;padding:4px 8px;
+  }
+  .payment-row .wa-btn{
+    background:#25D366;
+    color:#fff;
+    border:none;
+    font-size:11px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:16px;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+
+  form .field textarea{
+    width:100%;padding:12px;border:1.5px solid var(--line);
+    border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;
+  }
+
+  .toast{
+    position:fixed;
+    top:16px;left:50%;
+    transform:translateX(-50%) translateY(-60px);
+    background:var(--ink);
+    color:#fff;
+    padding:11px 20px;
+    border-radius:10px;
+    font-size:13px;
+    z-index:100;
+    transition:transform .25s ease;
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.err{background:var(--late);}
+
+  .loading-dots{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- ===== شاشة تسجيل الدخول ===== -->
+<div id="authScreen" class="screen active">
+  <div class="auth-box">
+    <div class="brand">
+      <div class="step-mark">خ</div>
+      <h1>خطوة للتقسيط</h1>
+      <p>إدارة مبيعات التقسيط بسهولة</p>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <form id="authForm">
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="authEmail" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" id="authPassword" required autocomplete="current-password" minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary" id="authSubmitBtn">دخول</button>
+    </form>
+    <div class="switch-mode">
+      <span id="switchText">ليس لديك حساب؟</span> <a id="switchLink">إنشاء حساب جديد</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== شاشة القفل بالبصمة/الوجه ===== -->
+<div id="lockScreen" class="screen">
+  <div id="authScreenBg" class="lock-bg">
+    <div class="auth-box" style="text-align:center;">
+      <div class="brand">
+        <div class="step-mark">🔒</div>
+        <h1>مرحباً بعودتك</h1>
+        <p>افتح التطبيق ببصمتك أو بصمة وجهك</p>
+      </div>
+      <button class="btn btn-primary" id="biometricUnlockBtn">🔓 فتح باستخدام البصمة</button>
+      <div class="switch-mode">
+        <a id="useEmailInsteadLink">الدخول بالبريد وكلمة المرور بدلاً من ذلك</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== التطبيق الرئيسي ===== -->
+<div id="appScreen" class="screen">
+  <header class="app-header">
+    <div class="title">
+      <div class="mark">خ</div>
+      <h1>خطوة للتقسيط</h1>
+    </div>
+    <button id="biometricSetupBtn" style="display:none;">🔒 تفعيل البصمة</button>
+    <button id="logoutBtn">خروج</button>
+  </header>
+
+  <div class="tabbar">
+    <button class="tab-btn active" data-tab="manager">المدير</button>
+    <button class="tab-btn" data-tab="customers">العملاء</button>
+    <button class="tab-btn" data-tab="summary">الملخص المالي</button>
+  </div>
+
+  <main>
+    <!-- ===== قسم المدير (كل البيانات) ===== -->
+    <div id="tab-manager" class="tab-panel active">
+      <div class="summary-bar">
+        <div class="summary-card">
+          <div class="num" id="sumCount">0</div>
+          <div class="lbl">عدد العملاء</div>
+        </div>
+        <div class="summary-card">
+          <div class="num" id="sumRemaining">0</div>
+          <div class="lbl">إجمالي المتبقي</div>
+        </div>
+      </div>
+
+      <div class="section-title">كل العملاء (بيانات كاملة)</div>
+      <div id="customersList"></div>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <div class="mark">📋</div>
+        <p>لا يوجد عملاء بعد. اضغط "إضافة عميل جديد" للبدء</p>
+      </div>
+    </div>
+
+    <!-- ===== قسم العملاء (أسماء فقط + بحث) ===== -->
+    <div id="tab-customers" class="tab-panel">
+      <div class="search-box">
+        <input type="text" id="customerSearchInput" placeholder="ابحث عن عميل بالاسم...">
+        <span class="search-icon">🔍</span>
+      </div>
+      <div id="customersSimpleList"></div>
+      <div id="emptyStateSimple" class="empty-state" style="display:none;">
+        <div class="mark">📋</div>
+        <p>لا يوجد عملاء بعد</p>
+      </div>
+    </div>
+
+    <!-- ===== الملخص المالي ===== -->
+    <div id="tab-summary" class="tab-panel">
+      <div class="section-title">المُحصَّل فعلياً (حتى الآن)</div>
+      <div class="stat-card purchase">
+        <div class="stat-label">مبلغ الشراء الكلي</div>
+        <div class="stat-num" id="statPurchase">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">مبلغ البيع الكلي (المُحصَّل)</div>
+        <div class="stat-num" id="statSale">0</div>
+      </div>
+      <div class="stat-card profit">
+        <div class="stat-label">الربح الصافي (المُحصَّل)</div>
+        <div class="stat-num" id="statProfit">0</div>
+      </div>
+
+      <div class="section-title">عند تحصيل كل الديون والأقساط (متوقع)</div>
+      <div class="stat-card">
+        <div class="stat-label">مبلغ البيع الكلي عند تحصيل كل الأقساط</div>
+        <div class="stat-num" id="statSaleFull">0</div>
+      </div>
+      <div class="stat-card profit">
+        <div class="stat-label">الربح الصافي عند تحصيل كل الديون</div>
+        <div class="stat-num" id="statProfitFull">0</div>
+      </div>
+    </div>
+  </main>
+
+  <button class="fab" id="addCustomerFab">+ إضافة عميل جديد</button>
+</div>
+
+<!-- ===== نافذة إضافة عميل ===== -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>إضافة عميل جديد</h2>
+      <button class="close-x" data-close="addOverlay">✕</button>
+    </div>
+    <form id="addForm">
+      <div class="field">
+        <label>اسم المشتري</label>
+        <input type="text" id="f_buyer_name" required>
+      </div>
+      <div class="field">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="f_phone">
+      </div>
+      <div class="field">
+        <label>اسم المنتج</label>
+        <input type="text" id="f_product_name" required>
+      </div>
+      <div class="field">
+        <label>الفئة</label>
+        <input type="text" id="f_category" placeholder="مثال: موبايلات، سيارات">
+      </div>
+      <div class="pay-row">
+        <div class="field">
+          <label>سعر الشراء</label>
+          <input type="number" step="0.01" id="f_purchase_price" required>
+        </div>
+        <div class="field">
+          <label>سعر البيع</label>
+          <input type="number" step="0.01" id="f_sale_price" required>
+        </div>
+      </div>
+      <div class="pay-row">
+        <div class="field">
+          <label>مبلغ التحميل (جزء من سعر البيع)</label>
+          <input type="number" step="0.01" id="f_markup_amount" value="0">
+        </div>
+        <div class="field">
+          <label>القسط الشهري (اختياري)</label>
+          <input type="number" step="0.01" id="f_monthly_installment">
+        </div>
+      </div>
+      <div class="pay-row">
+        <div class="field">
+          <label>المقدمة (اختياري)</label>
+          <input type="number" step="0.01" id="f_advance_amount" value="0">
+        </div>
+        <div class="field">
+          <label>تاريخ الشراء</label>
+          <input type="date" id="f_purchase_date" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>اسم المستثمر (اختياري)</label>
+        <input type="text" id="f_investor_name" placeholder="اختياري">
+      </div>
+      <button type="submit" class="btn btn-amber" id="addSubmitBtn">حفظ العميل</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== نافذة تفاصيل العميل ===== -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>تفاصيل العميل</h2>
+      <button class="close-x" data-close="detailOverlay">✕</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://qrlnamtzzxmduqpedhqy.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFybG5hbXR6enhtZHVxcGVkaHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMjc4ODgsImV4cCI6MjEwMzcwMzg4OH0.DlfnHfLVYTFZxXMaKZHLRAQcfbhSwKP1r3YXs_BzbDw";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    storageKey: 'khutwa-taqseet-auth'
+  }
+});
+
+let isSignup = false;
+let customers = [];
+let currentDetailId = null;
+let currentDetailSimplified = false;
+
+// ===== أدوات مساعدة =====
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+function fmt(n){
+  n = Number(n || 0);
+  return n.toLocaleString('ar-EG', {maximumFractionDigits:2});
+}
+function fmtDate(d){
+  if(!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
+}
+// ===== تبديل الأقسام (المدير / العملاء / الملخص) =====
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=> b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=> p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    document.getElementById('addCustomerFab').style.display = (btn.dataset.tab === 'manager') ? 'flex' : 'none';
+  });
+});
+
+function openSheet(id){ document.getElementById(id).classList.add('active'); }
+function closeSheet(id){ document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click', ()=> closeSheet(btn.dataset.close));
+});
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) ov.classList.remove('active'); });
+});
+
+// ===== المصادقة =====
+document.getElementById('switchLink').addEventListener('click', ()=>{
+  isSignup = !isSignup;
+  document.getElementById('authSubmitBtn').textContent = isSignup ? 'إنشاء الحساب' : 'دخول';
+  document.getElementById('switchText').textContent = isSignup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟';
+  document.getElementById('switchLink').textContent = isSignup ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+  document.getElementById('authError').style.display = 'none';
+});
+
+document.getElementById('authForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errBox = document.getElementById('authError');
+  errBox.style.display = 'none';
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '...جاري المعالجة';
+
+  try{
+    if(isSignup){
+      const { error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      showToast('تم إنشاء الحساب بنجاح، جارٍ الدخول...');
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+    }
+  }catch(err){
+    errBox.textContent = translateAuthError(err.message);
+    errBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = isSignup ? 'إنشاء الحساب' : 'دخول';
+  }
+});
+
+function translateAuthError(msg){
+  if(/Invalid login credentials/i.test(msg)) return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+  if(/already registered/i.test(msg)) return 'هذا البريد الإلكتروني مسجّل بالفعل';
+  if(/Password should be/i.test(msg)) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+  return msg;
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+});
+
+// ===== البصمة/الوجه (WebAuthn) - قفل محلي فوق الجلسة المحفوظة =====
+const BIO_CRED_KEY = 'khutwa-biometric-cred-id';
+const bioSupported = !!(window.PublicKeyCredential && navigator.credentials);
+let biometricUnlockedThisLoad = false;
+
+function randBytes(len){
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return arr;
+}
+function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function unb64(str){ return Uint8Array.from(atob(str), c=> c.charCodeAt(0)); }
+
+async function registerBiometric(){
+  if(!bioSupported){ showToast('جهازك لا يدعم البصمة/الوجه بهذا المتصفح', true); return; }
+  try{
+    const { data: { user } } = await sb.auth.getUser();
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge: randBytes(32),
+        rp:{ name:'خطوة للتقسيط' },
+        user:{ id: randBytes(16), name: user?.email || 'user', displayName: user?.email || 'user' },
+        pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
+      }
+    });
+    if(cred){
+      localStorage.setItem(BIO_CRED_KEY, b64(cred.rawId));
+      document.getElementById('biometricSetupBtn').style.display = 'none';
+      showToast('تم تفعيل الدخول بالبصمة لهذا الجهاز');
+    }
+  }catch(err){
+    showToast('تعذّر تفعيل البصمة: ' + (err.message || 'حدث خطأ'), true);
+  }
+}
+
+async function verifyBiometric(){
+  const credId = localStorage.getItem(BIO_CRED_KEY);
+  if(!credId) return false;
+  try{
+    const assertion = await navigator.credentials.get({
+      publicKey:{
+        challenge: randBytes(32),
+        allowCredentials:[{ id: unb64(credId), type:'public-key' }],
+        userVerification:'required',
+        timeout: 60000
+      }
+    });
+    return !!assertion;
+  }catch(err){
+    return false;
+  }
+}
+
+document.getElementById('biometricUnlockBtn').addEventListener('click', async ()=>{
+  const ok = await verifyBiometric();
+  if(ok){
+    biometricUnlockedThisLoad = true;
+    showAppScreen();
+  } else {
+    showToast('تعذّر التحقق بالبصمة، حاول مجدداً', true);
+  }
+});
+
+document.getElementById('useEmailInsteadLink').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+});
+
+document.getElementById('biometricSetupBtn').addEventListener('click', registerBiometric);
+
+function showAppScreen(){
+  document.getElementById('authScreen').classList.remove('active');
+  document.getElementById('lockScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  const hasBio = !!localStorage.getItem(BIO_CRED_KEY);
+  document.getElementById('biometricSetupBtn').style.display = (bioSupported && !hasBio) ? 'inline-block' : 'none';
+  loadCustomers();
+}
+
+sb.auth.onAuthStateChange((event, session)=>{
+  if(session){
+    document.getElementById('authForm').reset();
+    document.getElementById('authSubmitBtn').disabled = false;
+    const hasBio = !!localStorage.getItem(BIO_CRED_KEY);
+    if(hasBio && !biometricUnlockedThisLoad){
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('appScreen').classList.remove('active');
+      document.getElementById('lockScreen').classList.add('active');
+    } else {
+      showAppScreen();
+    }
+  } else {
+    document.getElementById('appScreen').classList.remove('active');
+    document.getElementById('lockScreen').classList.remove('active');
+    document.getElementById('authScreen').classList.add('active');
+  }
+});
+
+// ===== تحميل العملاء =====
+async function loadCustomers(){
+  const list = document.getElementById('customersList');
+  list.innerHTML = '<div class="loading-dots">...جارٍ التحميل</div>';
+  const { data, error } = await sb.from('customers').select('*').order('created_at', {ascending:false});
+  if(error){ showToast('خطأ في التحميل: ' + error.message, true); list.innerHTML=''; return; }
+  customers = data || [];
+  renderCustomers();
+  renderCustomersSimple();
+  renderSummary();
+}
+
+// ===== قسم العملاء (أسماء فقط + بحث) =====
+function renderCustomersSimple(){
+  const query = (document.getElementById('customerSearchInput').value || '').trim();
+  const list = document.getElementById('customersSimpleList');
+  const empty = document.getElementById('emptyStateSimple');
+
+  const filtered = query
+    ? customers.filter(c=> (c.buyer_name || '').includes(query) || (c.phone || '').includes(query))
+    : customers;
+
+  if(customers.length === 0){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'لا يوجد عملاء بعد';
+    return;
+  }
+  if(filtered.length === 0){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    empty.querySelector('p').textContent = 'لا يوجد عميل بهذا الاسم';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = `<div class="name-list">${filtered.map(c=>{
+    const initial = (c.buyer_name || '؟').trim().charAt(0);
+    const st = statusForCustomer(c);
+    return `
+      <div class="name-row" data-id="${c.id}">
+        <div class="name-avatar">${escapeHtml(initial)}</div>
+        <div class="name-info">
+          <div class="n-name">${escapeHtml(c.buyer_name)}</div>
+          <div class="n-sub">${escapeHtml(c.product_name)} · متبقي ${fmt(c.remaining_amount)}</div>
+        </div>
+        <span class="n-arrow">‹</span>
+      </div>`;
+  }).join('')}</div>`;
+
+  list.querySelectorAll('.name-row').forEach(row=>{
+    row.addEventListener('click', ()=> openDetail(row.dataset.id, true));
+  });
+}
+
+document.getElementById('customerSearchInput').addEventListener('input', renderCustomersSimple);
+
+// ===== الملخص المالي =====
+function renderSummary(){
+  // لا يُحتسب العميل بالمُحصَّل الفعلي إلا بعد إتمام أول عملية دفع فعلياً (أو مقدمة)
+  const paidCustomers = customers.filter(c=> Number(c.remaining_amount) < Number(c.total_amount));
+  const totalPurchase = paidCustomers.reduce((s,c)=> s + Number(c.purchase_price||0), 0);
+  // مبلغ البيع الكلي المُحصَّل = فقط المبالغ التي وصلت فعلياً للمدير، يزيد مع كل دفعة
+  const totalSale = paidCustomers.reduce((s,c)=> s + (Number(c.total_amount||0) - Number(c.remaining_amount||0)), 0);
+  const netProfit = totalSale - totalPurchase;
+  document.getElementById('statPurchase').textContent = fmt(totalPurchase);
+  document.getElementById('statSale').textContent = fmt(totalSale);
+  document.getElementById('statProfit').textContent = fmt(netProfit);
+
+  // القيم المتوقعة عند تحصيل كل الديون والأقساط (كل العملاء، حتى اللي ما دفعوا شيء بعد)
+  const totalPurchaseFull = customers.reduce((s,c)=> s + Number(c.purchase_price||0), 0);
+  const totalSaleFull = customers.reduce((s,c)=> s + Number(c.total_amount||0), 0);
+  const netProfitFull = totalSaleFull - totalPurchaseFull;
+  document.getElementById('statSaleFull').textContent = fmt(totalSaleFull);
+  document.getElementById('statProfitFull').textContent = fmt(netProfitFull);
+}
+
+function statusForCustomer(c){
+  if(Number(c.remaining_amount) <= 0) return {cls:'ok', label:'مكتمل السداد'};
+  const monthsSincePurchase = monthsBetween(new Date(c.purchase_date), new Date());
+  const expectedPaid = Math.min(Number(c.total_amount), monthsSincePurchase * Number(c.monthly_installment || 0));
+  const actuallyPaid = Number(c.total_amount) - Number(c.remaining_amount);
+  const gap = expectedPaid - actuallyPaid;
+  if(gap <= 0) return {cls:'ok', label:'ملتزم'};
+  if(gap <= Number(c.monthly_installment || 1)) return {cls:'warn', label:'متأخر شهر'};
+  return {cls:'late', label:'متأخر أكثر'};
+}
+function monthsBetween(d1, d2){
+  return Math.max(0, (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()));
+}
+
+function renderCustomers(){
+  const list = document.getElementById('customersList');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('sumCount').textContent = customers.length;
+  const totalRemaining = customers.reduce((s,c)=> s + Number(c.remaining_amount||0), 0);
+  document.getElementById('sumRemaining').textContent = fmt(totalRemaining);
+
+  if(customers.length === 0){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = customers.map(c=>{
+    const st = statusForCustomer(c);
+    const paid = Number(c.total_amount) - Number(c.remaining_amount);
+    const pct = c.total_amount > 0 ? Math.min(100, Math.round(paid / c.total_amount * 100)) : 0;
+    return `
+      <div class="customer-card" data-id="${c.id}">
+        <div class="cc-top">
+          <div>
+            <div class="cc-name">${escapeHtml(c.buyer_name)}</div>
+            <div class="cc-product">${escapeHtml(c.product_name)}</div>
+          </div>
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
+        <div class="cc-progress"><div class="cc-progress-fill" style="width:${pct}%"></div></div>
+        <div class="cc-nums">
+          <span>مدفوع: <b>${fmt(paid)}</b></span>
+          <span>متبقي: <b>${fmt(c.remaining_amount)}</b></span>
+        </div>
+      </div>`;
+  }).join('');
+
+  list.querySelectorAll('.customer-card').forEach(card=>{
+    card.addEventListener('click', ()=> openDetail(card.dataset.id));
+  });
+}
+
+function normalizePhoneForWhatsApp(phone){
+  let digits = (phone || '').replace(/[^\d]/g, '');
+  if(!digits) return '';
+  // رقم عراقي محلي يبدأ بصفر (مثال: 07714493619) → يحوَّل لصيغة دولية بدون الصفر مع رمز العراق 964
+  if(digits.startsWith('00')) digits = digits.slice(2);
+  if(digits.startsWith('0')) digits = '964' + digits.slice(1);
+  return digits;
+}
+
+function sendWhatsAppReceipt(phone, amount, remaining){
+  const digits = normalizePhoneForWhatsApp(phone);
+  if(!digits){ showToast('لا يمكن إرسال واتساب: رقم الهاتف غير مسجّل', true); return; }
+  const text = `شكراً لاختياركم خطوة للتقسيط ✅\nتم دفع مبلغ: ${fmt(amount)}\nالمبلغ المتبقي: ${fmt(remaining)}`;
+  const url = `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// ===== إضافة عميل =====
+document.getElementById('addCustomerFab').addEventListener('click', ()=>{
+  document.getElementById('addForm').reset();
+  document.getElementById('f_purchase_date').value = new Date().toISOString().slice(0,10);
+  openSheet('addOverlay');
+});
+
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('addSubmitBtn');
+  btn.disabled = true; btn.textContent = '...جارٍ الحفظ';
+
+  const payload = {
+    buyer_name: document.getElementById('f_buyer_name').value.trim(),
+    phone: document.getElementById('f_phone').value.trim(),
+    product_name: document.getElementById('f_product_name').value.trim(),
+    category: document.getElementById('f_category').value.trim(),
+    purchase_price: Number(document.getElementById('f_purchase_price').value || 0),
+    sale_price: Number(document.getElementById('f_sale_price').value || 0),
+    markup_amount: Number(document.getElementById('f_markup_amount').value || 0),
+    monthly_installment: Number(document.getElementById('f_monthly_installment').value || 0),
+    advance_amount: Number(document.getElementById('f_advance_amount').value || 0),
+    purchase_date: document.getElementById('f_purchase_date').value,
+    investor_name: document.getElementById('f_investor_name').value.trim(),
+  };
+
+  if(payload.markup_amount > payload.sale_price){
+    showToast('مبلغ التحميل جزء من سعر البيع، لا يمكن أن يكون أكبر منه', true);
+    btn.disabled = false; btn.textContent = 'حفظ العميل';
+    return;
+  }
+
+  const { data: newCustomer, error } = await sb.from('customers').insert(payload).select().single();
+  btn.disabled = false; btn.textContent = 'حفظ العميل';
+
+  if(error){ showToast('خطأ: ' + error.message, true); return; }
+  showToast('تم إضافة العميل بنجاح');
+  if(newCustomer && Number(newCustomer.advance_amount) > 0){
+    sendWhatsAppReceipt(newCustomer.phone, newCustomer.advance_amount, newCustomer.remaining_amount);
+  }
+  closeSheet('addOverlay');
+  loadCustomers();
+});
+
+// ===== تفاصيل العميل =====
+async function openDetail(id, simplified){
+  currentDetailId = id;
+  currentDetailSimplified = !!simplified;
+  const c = customers.find(x=> x.id === id);
+  if(!c) return;
+
+  const content = document.getElementById('detailContent');
+  content.innerHTML = '<div class="loading-dots">...جارٍ التحميل</div>';
+  openSheet('detailOverlay');
+
+  const { data: payments, error } = await sb.from('payments').select('*').eq('customer_id', id).order('payment_date', {ascending:false});
+  if(error){ showToast('خطأ: ' + error.message, true); }
+
+  const paid = Number(c.total_amount) - Number(c.remaining_amount);
+
+  const infoGridHtml = simplified ? `
+    <div class="info-grid">
+      <div class="info-item"><div class="l">اسم المنتج</div><div class="v">${escapeHtml(c.product_name)}</div></div>
+      <div class="info-item"><div class="l">الفئة</div><div class="v">${escapeHtml(c.category) || '—'}</div></div>
+      <div class="info-item"><div class="l">تاريخ الشراء</div><div class="v">${fmtDate(c.purchase_date)}</div></div>
+      <div class="info-item"><div class="l">رقم الهاتف</div><div class="v">${escapeHtml(c.phone) || '—'}</div></div>
+      <div class="info-item"><div class="l">سعر البيع</div><div class="v">${fmt(c.sale_price)}</div></div>
+      <div class="info-item"><div class="l">المستثمر</div><div class="v">${escapeHtml(c.investor_name) || '—'}</div></div>
+    </div>
+  ` : `
+    <div class="info-grid">
+      <div class="info-item"><div class="l">رقم الهاتف</div><div class="v">${escapeHtml(c.phone) || '—'}</div></div>
+      <div class="info-item"><div class="l">تاريخ الشراء</div><div class="v">${fmtDate(c.purchase_date)}</div></div>
+      <div class="info-item"><div class="l">سعر الشراء</div><div class="v">${fmt(c.purchase_price)}</div></div>
+      <div class="info-item"><div class="l">سعر البيع</div><div class="v">${fmt(c.sale_price)}</div></div>
+      <div class="info-item"><div class="l">مبلغ التحميل</div><div class="v">${fmt(c.markup_amount)}</div></div>
+      <div class="info-item"><div class="l">المقدمة</div><div class="v">${fmt(c.advance_amount)}</div></div>
+      <div class="info-item"><div class="l">القسط الشهري</div><div class="v">${fmt(c.monthly_installment)}</div></div>
+      <div class="info-item"><div class="l">المبلغ الكلي</div><div class="v">${fmt(c.total_amount)}</div></div>
+      <div class="info-item"><div class="l">اسم المستثمر</div><div class="v">${escapeHtml(c.investor_name) || '—'}</div></div>
+    </div>
+  `;
+
+  content.innerHTML = `
+    <div class="detail-hero">
+      <div class="dh-name">${escapeHtml(c.buyer_name)}</div>
+      <div class="dh-product">${escapeHtml(c.product_name)} ${c.category ? '· ' + escapeHtml(c.category) : ''}</div>
+      <div class="dh-remaining">
+        <div><div class="n">${fmt(c.remaining_amount)}</div><div class="l">المبلغ المتبقي</div></div>
+        <div style="text-align:left"><div class="n" style="font-size:16px;color:#fff">${fmt(paid)}</div><div class="l">المبلغ المدفوع</div></div>
+      </div>
+    </div>
+
+    ${infoGridHtml}
+
+    <div class="pay-form">
+      <h3>تسجيل دفعة جديدة</h3>
+      <form id="payForm">
+        <div class="pay-row">
+          <div class="field">
+            <label>المبلغ</label>
+            <input type="number" step="0.01" id="p_amount" required max="${c.remaining_amount}">
+          </div>
+          <div class="field">
+            <label>تاريخ الدفعة</label>
+            <input type="date" id="p_date" value="${new Date().toISOString().slice(0,10)}" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-amber" style="margin-top:12px;">تسجيل الدفعة</button>
+      </form>
+    </div>
+
+    <div class="section-title" style="margin-top:0;">سجل الدفعات</div>
+    <div class="payments-list">
+      ${(payments && payments.length) ? payments.map(p=>`
+        <div class="payment-row">
+          <span class="pdate">${fmtDate(p.payment_date)}</span>
+          <span class="pamt">${fmt(p.amount)}</span>
+          <button class="del-pay" data-payid="${p.id}">حذف</button>
+        </div>
+      `).join('') : '<div style="color:var(--muted);font-size:13px;padding:10px 4px;">لا توجد دفعات مسجلة بعد</div>'}
+    </div>
+
+    <button type="button" class="btn btn-ghost" id="deleteCustomerBtn" style="margin-top:22px;color:var(--late);border-color:var(--late);">حذف هذا العميل نهائياً</button>
+  `;
+
+  document.getElementById('payForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const amount = Number(document.getElementById('p_amount').value);
+    const date = document.getElementById('p_date').value;
+    if(amount <= 0){ showToast('المبلغ يجب أن يكون أكبر من صفر', true); return; }
+
+    const { error } = await sb.rpc('record_payment', {
+      p_customer_id: id,
+      p_amount: amount,
+      p_payment_date: date
+    });
+    if(error){ showToast('خطأ: ' + error.message, true); return; }
+    showToast('تم تسجيل الدفعة');
+
+    const newRemaining = Number(c.remaining_amount) - amount;
+    sendWhatsAppReceipt(c.phone, amount, newRemaining);
+
+    await loadCustomers();
+    openDetail(id, currentDetailSimplified);
+  });
+
+  document.getElementById('deleteCustomerBtn').addEventListener('click', async ()=>{
+    if(!confirm(`هل أنت متأكد من حذف العميل "${c.buyer_name}" نهائياً؟ سيتم حذف كل سجل دفعاته أيضاً ولا يمكن التراجع.`)) return;
+    const { error: delErr } = await sb.from('customers').delete().eq('id', id);
+    if(delErr){ showToast('خطأ: ' + delErr.message, true); return; }
+    showToast('تم حذف العميل');
+    closeSheet('detailOverlay');
+    loadCustomers();
+  });
+
+  content.querySelectorAll('.del-pay').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('هل تريد حذف هذه الدفعة؟ سيتم إعادة المبلغ للمتبقي')) return;
+      const payId = btn.dataset.payid;
+      const payRow = payments.find(p=> p.id === payId);
+      const { error: delErr } = await sb.from('payments').delete().eq('id', payId);
+      if(delErr){ showToast('خطأ: ' + delErr.message, true); return; }
+      const { error: updErr } = await sb.from('customers').update({
+        remaining_amount: Number(c.remaining_amount) + Number(payRow.amount)
+      }).eq('id', id);
+      if(updErr){ showToast('خطأ: ' + updErr.message, true); return; }
+      showToast('تم حذف الدفعة');
+      await loadCustomers();
+      openDetail(id, currentDetailSimplified);
+    });
+  });
+}
+</script>
+</body>
+</html>
